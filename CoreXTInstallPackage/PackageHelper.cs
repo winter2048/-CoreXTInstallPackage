@@ -1,6 +1,7 @@
 ﻿using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Frameworks;
+using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
@@ -75,7 +76,7 @@ namespace CoreXTInstallPackage
 					list.Add(new PackageInfo
 					{
 						Id = item.Id,
-						Version = item.VersionRange,
+						Version = item.VersionRange.MinVersion,
 						Tfm = pkg.DependencySets.Where(p => p.TargetFramework.IsCompatibleFramework(tfm)).OrderByDescending(p => p.TargetFramework.Version)?.FirstOrDefault().TargetFramework
 					});
 				}
@@ -90,17 +91,32 @@ namespace CoreXTInstallPackage
 			foreach (var item in des)
 			{
 				list.Add(item);
-				var ss = await PackageHelper.GetDependencysAll(item.Id, tfm, item.Version.MinVersion.OriginalVersion);
+				var ss = await PackageHelper.GetDependencysAll(item.Id, tfm, item.Version.OriginalVersion);
 				if (ss.Count > 0)
 				{
 					list.AddRange(ss);
 				}
 			}
-			return list.GroupBy(p => p.Id).Select(p => p.OrderByDescending(p => p.Version.MinVersion).FirstOrDefault()).ToList();
+			return list.GroupBy(p => p.Id).Select(p => p.OrderByDescending(p => p.Version).FirstOrDefault()).ToList();
 		}
 
+        public static async Task<List<PackageInfo>> GetPackageAndDependencysAll(string packageId, NuGetFramework tfm, string? version = null)
+        {
+            List<PackageInfo> list = new List<PackageInfo>();
+            var pkg = await GetPackage(packageId, version);
+            var dependencyGroups = pkg.DependencySets.Where(p => p.TargetFramework.IsCompatibleFramework(tfm)).OrderByDescending(p => p.TargetFramework.Version).ToList();
+            list.Add(new PackageInfo()
+            {
+                Id = pkg.Identity.Id,
+                Version = pkg.Identity.Version,
+                Tfm = dependencyGroups.FirstOrDefault()?.TargetFramework
+            });
+            list.AddRange(await GetDependencysAll(packageId, tfm, version));
+            return list;
+        }
 
-		static bool IsCompatibleFramework(this NuGetFramework cTfk, NuGetFramework tfm)
+
+        static bool IsCompatibleFramework(this NuGetFramework cTfk, NuGetFramework tfm)
 		{
 			if (tfm.Framework == FrameworkIdentifiers.Net)
 			{

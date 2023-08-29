@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -9,6 +9,10 @@
 
   <ItemGroup>
     <PackageReference Include="NuGet.Protocol" Version="6.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Template\ClassLibrary.csproj" />
   </ItemGroup>
 
 </Project>

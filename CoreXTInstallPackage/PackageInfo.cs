@@ -12,7 +12,7 @@ namespace CoreXTInstallPackage
 	{
         public string Id { get; set; }
 
-        public VersionRange Version { get; set; }
+        public NuGetVersion Version { get; set; }
 
         public NuGetFramework? Tfm { get; set; }
     }
